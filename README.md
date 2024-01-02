@@ -1,2 +1,2 @@
 # HMon
-Hardware Monitor Samples &amp; Documentation
+Health Monitor Samples &amp; Documentation
