@@ -291,7 +291,7 @@ Example:
 ["PollFacts",{"Facts":[1,"Workspace"],"Interval":750}]
 ```
 
-If a UID is specified it will appear in every message that it sent.
+If a UID is specified it will appear in every message that is sent.
 
 Messages will continue at the requested frequency until either a new
 request is made (which will supersede any already established) or a
@@ -360,7 +360,7 @@ The following events may be subscribed to:
 
 Sending a `Subscribe` message resets the list of subscribed events to those specified - that is, it replaces any existing subscriptions. The list may be empty.
 
-"Tid", "Stack", "DMX" and "Exeption" appear in the [`Notification`](#notification) reponse in
+"Tid", "Stack", "DMX" and "Exception" appear in the [`Notification`](#notification) response in
 the same format as the ["Threads" fact](#threads-fact).
 
 **Note:** following a WSFULL exception the interpreter may be unable to send
@@ -576,7 +576,7 @@ Sent by the interpreter under user/application control using [`111⌶`](#111).
 Example:
 
 ```json
-["UserMessage",{"UID":"123","Messge":"Hello"}]
+["UserMessage",{"UID":"123","Message":"Hello"}]
 ```
 
 # Interpreter I-beam functions
