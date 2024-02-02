@@ -7,7 +7,7 @@ to gauge its "state of health".
 Dyalog does not provide any application that uses the interface other than a
 sample.
 
-The interface is for a _monitor_ and only allows the client to _observe_
+The interface is for a _monitor_ and currently only allows the client to _observe_
 what is going on inside the interpreter to which it is attached, not
 control it in any way.
 
@@ -172,12 +172,10 @@ message, rejected, and a [`MalformedCommand`](#malformedcommand) response will b
 ### GetFacts
 
 Requests zero or more "facts" about the application state, and will be
-responded to with a [`Facts`](#facts) message. Each available fact has a numeric and
-alphanumeric (string) identifier, and either may be used for the
-request. Example:
+responded to with a [`Facts`](#facts) message.
 
 ```json
-["GetFacts",{"Facts":[1,"Workspace"]}]
+["GetFacts",{"Facts":["Host","Workspace"]}]
 ```
 
 The [`Facts`](#facts) response will contain, for each requested fact,
@@ -198,7 +196,20 @@ The following facts may be requested:
 | 5       | "SuspendedThreads"   | Values (one per thread)                      |
 | 6       | "ThreadCount"        | Value                                        |
 
-The contents of the "Value" object or "Values" objects are:
+Fact may be requested using either their numeric Fact ID or their
+alphanumeric (string) Fact name, so the following `GetFacts` requests are equivalent to
+the one above:
+
+```json
+["GetFacts",{"Facts":[1,3]}]
+```
+
+```json
+["GetFacts",{"Facts":["Host",3]}]
+```
+
+The contents of the "Value" object or "Values" objects in the [`Facts`](#facts)
+response are:
 
 #### "Host" fact
 
@@ -229,6 +240,10 @@ The contents of the "Value" object or "Values" objects are:
     for RIDE connections. There are no further entries in this object if the value is 0.
   - "HTTPServer" - a Boolean value indicating whether the interpreter is
     running as a RIDE HTTP server ("Zero footprint" RIDE).
+  - "Version" - the Comms Layer (Conga) version.
+  - "Address" - the interpreter's network IP address.
+  - "Port4" - the interpreter's network port number.
+  - "Port6" - an alternate port number.
 
 #### "AccountInformation" fact
 
@@ -297,9 +312,12 @@ Messages will continue at the requested frequency until either a new
 request is made (which will supersede any already established) or a
 [`StopFacts`](#stopfacts) message is sent.
 
-**Note:** polling messages may stop temporarily when the main interpreter
-thread is inactive - that is, it is not running APL code or responding
-to external input such as HMON requests or keyboard events.
+**Note:** polling messages may occasionally stop when the interpreter is
+waiting on an external event such as a file operation, `⎕NA` call, etc.
+It is currently also a limitation that polling messages may also stop
+when the interpreter is inactive - that is,
+when it is not running APL code or responding to external input such as HMON
+requests or keyboard events.
 
 ### StopFacts
 
@@ -344,7 +362,7 @@ Each subscribable event has a numeric and alphanumeric (string)
 identifier, and either may be used for the request. Example:
 
 ```json
-["Subscribe",{"UID":"XX","Events":["WorkspaceCompaction",4]}]
+["Subscribe",{"UID":"XX","Events":[1,4]}]
 ```
 
 No event notifications are enabled by default.
@@ -529,6 +547,8 @@ Activity codes are:
 | 3    | Performing a workspace compaction                               |
 | 4    | Performing a workspace check                                    |
 | 222  | Sleeping due to the use of [`222⌶`](#222) (an internal testing feature) |
+
+_It is anticipated that this list will be significantly extended in future._
 
 Examples:
 
