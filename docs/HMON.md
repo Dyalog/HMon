@@ -19,7 +19,7 @@ WHICH ARE INCOMPATIBLE WITH THE SPECIFICATION DESCRIBED HERE.
 By making use of this feature now and providing your feedback you will help
 shape its ongoing development. Please do get in touch to discuss your
 experiences, either through your normal communication channels or by emailing
-[support@dyalog.com](support@dyalog.com)
+[support@dyalog.com](mailto:support@dyalog.com)
 
 # Permitting connections and controlling access levels
 
