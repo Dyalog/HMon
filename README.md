@@ -12,7 +12,7 @@ The ```docs``` folder contains documentation:
 
 ## AplSource
 
-The source code for the demonstration client can be found here. See the [Usage Guide](docs/UsageGuide) for more instructions on how to load and run this code..
+The source code for the demonstration client can be found here. See the [Usage Guide](docs/UsageGuide.md) for more instructions on how to load and run this code..
 
 ## Reporting Issues
 
