@@ -1,0 +1,6 @@
+DemoClose args
+⎕←'HMON terminating...'
+hmonform.Visible←0
+⎕EX 'hmonform' 'hmongrid' 'hmonride' 'hmontxt' 'hmonstack' 'hmonscroll'
+⎕TKILL ⎕TNUMS
+⎕←'HMON terminated'

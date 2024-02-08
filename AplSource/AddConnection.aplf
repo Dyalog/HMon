@@ -1,0 +1,6 @@
+ {cid}←AddConnection (con host port);cid
+ :Hold 'hmon'
+     'Maximum number of connections reached'⎕SIGNAL(999<≢conns)/11
+     cid←⊃(⍳1+≢conns)~conns[;1]
+     conns⍪←cid con host port
+ :EndHold

@@ -1,0 +1,8 @@
+ Reset dummy;z
+
+ TOKEN ⎕TALLOC ¯1
+ :If 0≠≢conns
+     z←iConga.Close¨conns[;2]
+ :EndIf
+ conns←0⌿conns
+ ⎕EX 'iConga'

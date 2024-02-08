@@ -1,0 +1,11 @@
+ {r}←{cbinfo}GetLastKnownState cid;m;ns
+ :If 0=⎕NC'cbinfo' ⋄ cbinfo←'' 0 ⋄ :EndIf ⍝ do not call back
+
+ r←cbinfo SendWait cid('GetLastKnownState'(⎕NS''))
+ :If (0=≢⊃cbinfo) ⍝ No callback fn
+     :If 'LastKnownState'≢⊃r
+          ⎕←r
+          ∘∘∘
+     :EndIf
+     r←r[2]
+ :EndIf

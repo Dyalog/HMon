@@ -1,0 +1,9 @@
+ ok←Connect(host port);d;cid;sp;z;up
+
+ d←iConga.Clt '' host port 'BlkText' 32768 ('Magic' magic)
+ :If (⊃d)≢0
+     ('Unable to connect to ',host,':',(⍕port),' - ',3⊃d) ⎕SIGNAL 11
+ :EndIf
+ AddConnection (2⊃d) host port
+ ok←Handshake cid
+ 'Handshake Failed ' ⎕SIGNAL ok↓11

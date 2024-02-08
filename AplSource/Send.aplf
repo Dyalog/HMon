@@ -1,0 +1,9 @@
+ d←cid Send u;d;i;clt
+ i←conns[;1]⍳cid
+ 'Connection not found' ⎕SIGNAL (i>≢conns)/11
+ clt←⊃conns[i;2]
+ Log 'PUT ',(⍕cid),': ',u
+ d←iConga.Send clt (utf8 u)
+ :If 0≠⊃d
+     Log'PUT FAILED: ',⍕,d
+ :EndIf

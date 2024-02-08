@@ -1,0 +1,16 @@
+ Log x;txt
+
+  txt←,⍕(⊃'hh:mm:ss'(1200⌶)1 ⎕DT'J'),' ',x
+  :If 0≠⎕NC 'hmonlog'
+      :If (40↑x)≡40↑9↓⊃hmonlog.Text
+         hmonlog.Text[1]←⊂txt ⍝ Just update top line
+      :Else
+      hmonlog.Text←(⊂txt),¯1↓hmonlog.Text
+      :EndIf
+  :EndIf
+
+ :If logging>0
+     :If logtn∊⎕NNUMS
+         (utf8 x,nl)⎕NAPPEND logtn
+     :EndIf
+ :EndIf

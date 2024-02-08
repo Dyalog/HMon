@@ -1,0 +1,42 @@
+ r←{cbinfo}SendWait(cid u);i;uid;payload;z;fn;poll;retried
+ :If 0=⎕NC'cbinfo' ⋄ cbinfo←'' 0 ⋄ :EndIf
+ (fn poll)←cbinfo
+ :If 0≠≢fn
+     ('Callback function ',fn,' not found')⎕SIGNAL(3≠⎕NC fn)/6
+ :EndIf
+
+ retried←0
+
+RETRY:
+
+ :Hold 'hmon'
+     :If (2=≢u)∧326=⎕DR u
+         u[2].UID←⍕cid,uid←⊃(⍳1+≢queue)~queue[;1]
+         payload←⎕JSON u
+     :Else
+         uid←0 ⋄ payload←u
+     :EndIf
+     queue←(queue∨.≢cid uid fn)⌿queue ⍝ avoid duplicates
+     'Queue is full'⎕SIGNAL(uid>999)/11
+     queue←cid uid fn⍪queue ⍝ lifo
+ :EndHold
+
+ :If 0≠⊃z←cid Send payload
+     ⎕←'Send Failed'
+     ∘∘∘
+ :EndIf
+
+ :If (0=≢fn)∨'Subscribe'≡⊃u ⍝ No callback function - or subscribe which gets both a result AND a subscription
+     :Trap 1006
+          r←cid Wait uid
+     :Else
+          :If retried<5
+             retried+←1
+             →RETRY
+          :Else
+             ∘∘∘
+          :EndIf
+     :EndTrap
+ :Else
+     r←runmonitor ⍬
+ :EndIf

@@ -1,0 +1,7 @@
+LaunchRide address;⎕USING
+⎕USING←''
+:If 0=⎕NC 'RIDE_PATH'
+    RIDE_PATH←'C:\Program Files\Dyalog\Dyalog APL-64 19.0 Unicode\dyalog.exe'
+:EndIf
+System.Environment.SetEnvironmentVariable'RIDE_CONNECT' address
+⎕CMD (RIDE_PATH) 'Normal'

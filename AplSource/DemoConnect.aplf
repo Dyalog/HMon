@@ -1,0 +1,14 @@
+DemoConnect cid;i;z
+⍝ On connection, set up all subscriptions
+
+⍝ First expand the demodata table to receive values
+:If (≢demodata)<i←demodata[;1]⍳cid
+    demodata⍪←demoprotos
+:EndIf
+
+demodata[i;democols⍳'id' 'address']←{⍵[1],(⊂(2⊃⍵),':',⍕3⊃⍵)}conns[conns[;1]⍳cid;1 3 4]
+hmongrid.(Values CellTypes)←demodata (hmongrid.CellTypes⍪1)
+
+⍝ Now set up the subscriptions
+'DemoReceive' 5000 GetFacts cid allfacts~'Threads' 'SuspendedThreads'
+Subscribe cid ('WorkspaceCompaction' 'UntrappedSignal') 'DemoReceive'

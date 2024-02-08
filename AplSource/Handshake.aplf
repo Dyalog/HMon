@@ -1,0 +1,19 @@
+ok←Handshake cid;sp;z;con;host;port
+⍝ Perform RIDE/HMON handshake
+
+ok←0
+:If (sp←'SupportedProtocols=2')≡z←cid Wait 0
+ :AndIf 0=⊃z←cid Send sp
+ :AndIf 'UsingProtocol=2'≡up←cid Wait 0
+ :AndIf 0=⊃z←cid Send up
+     (con host port)←conns[conns[;1]⍳cid;2 3 4]
+     Log'Connected ',con,' from ',host,':',⍕port
+     :If 3=⎕NC onconnection
+         ⍎onconnection,' cid'
+     :EndIf
+     ok←1
+ :Else
+     :Hold 'hmon'
+         conns←(conns[;1]≠cid)⌿conns
+     :EndHold
+ :EndIf

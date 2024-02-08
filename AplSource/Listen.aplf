@@ -1,0 +1,12 @@
+r←Listen (host port);d
+⍝ Listen for incoming HMON connections and add them as required
+ 'Cannot start listener - monitor thread already running' ⎕SIGNAL (monitortid∊⎕TNUMS)/11
+
+ d←iConga.Srv '' host port 'BlkText' 32768 ('Magic' magic)
+ :If 0≢⊃d
+     ('Unable to start listener on ',host,':',(⍕port),' - ',3⊃d) ⎕SIGNAL 11
+ :EndIf
+ listener←2⊃d
+ Log'Listener ',listener,' created on port ',(⍕port),,⊃' YYYY-MM-DD hh:mm:ss'(1200⌶)1 ⎕DT'J'
+
+ monitortid←monitor&1

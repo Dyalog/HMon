@@ -1,0 +1,4 @@
+LaunchDemoProcess withride;folder;ride
+folder←⊃⎕SE.Link.Links.dir
+ride←withride/' RIDE_INIT="SERVE::0"' ⍝ Start RIDE listening on available port
+⎕CMD  ('dyalog LOAD="',folder,'\DemoApplication.aplf"',ride) 'Normal'

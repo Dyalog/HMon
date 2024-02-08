@@ -1,0 +1,14 @@
+ {r}←Subscribe(cid facts fn);m;ns
+
+ facts←,⊆facts
+ facts,←(0=≢facts)/⊂'All'
+ :If ∨/m←~facts∊allsubs,⍳≢allsubs
+     ('Unknown facts: ',,⍕m/facts)⎕SIGNAL 11
+ :EndIf
+
+ ns←⎕NS''
+ ns.Events←facts
+ r←(fn 0) SendWait cid('Subscribe'ns)
+ :If 'Subscribed'≡⊃r
+     r←r[2]
+ :EndIf

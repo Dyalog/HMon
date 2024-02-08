@@ -1,0 +1,90 @@
+ monitor listen;z;rc;con;event;data;ns;i;cid;uid;type;tkn;fn;m;removed;done;cb;port;host;json
+ ⍝ While there is anything in the queue, monitor Conga messages
+ ⍝ and release functions waiting on ⎕TPUT
+
+ listening←listen
+ :While listening∨0≠≢queue
+     :If 0=⊃z←iConga.Wait'.' 5000
+         (rc con event data)←4↑z
+
+         :Select event
+         :Case 'Timeout' ⋄ :Continue
+         :Case 'Connect'
+             (host port)←(2⊃iConga.GetProp con'PeerAddr')[2 4]
+             cid←AddConnection con((-':'⍳⍨⌽host)↓host)port
+             Handshake&cid ⍝ Handshake must run on another thread
+
+         :Case 'Block'
+             :If (≢conns)<i←conns[;2]⍳⊂con
+                 Log'*** Message received on unexpected connection'
+                 Log'===> ',,⍕z
+                 :Continue
+             :Else
+                 cid←conns[i;1]
+             :EndIf
+
+             uid←0
+             :Trap 6 11 ⍝ Might be handshake and not JSON data, or JSON data with no UID
+                 json←'UTF-8' ⎕UCS ⎕UCS data
+                 data←0 ⎕JSON json
+                 Log 'GET ',(⍕cid),': ',json
+                 tkn←'uid'GetToken uid←2⊃2⊃⎕VFI data[2].UID
+             :Else
+                 tkn←'cid'GetToken cid
+             :EndTrap
+
+             :Hold 'hmon'
+                 cb←0
+                 :If (≢queue)<i←queue[;1 2]⍳cid uid
+                     Log'*** Unqueued message received'
+                     Log'===> ',,⍕z
+                     :Continue
+                 :ElseIf cb←(0≠≢fn←⊃queue[i;3])∧'Subscribed'≢⊃data ⍝ Callback fn (ignore for "Subscribe" call)
+                     (⍎fn)&data            ⍝ Run it in a separate thread
+                 :EndIf
+
+                 :If done←80≠⎕DR data      ⍝ If namespace, check polling state
+                     done←data[2].{6::0 ⋄ Interval=0}⍬  ⍝ Polling done
+                 :EndIf
+                 :If done∨0=≢fn            ⍝   ... or no callback fn
+                     queue←(i≠⍳≢queue)⌿queue
+                 :EndIf
+                 :If ~cb                   ⍝ No callback done, return result via TPUT
+                     data ⎕TPUT tkn
+                 :EndIf
+             :EndHold
+
+         :CaseList 'Closed' 'Error'
+             Log event,': ',con
+             :If con≡listener
+                 ∘∘∘
+             :EndIf
+
+             :Hold 'hmon'
+                  cid←(conns[;1],¯1)[conns[;2]⍳⊂con]
+                  removed←(m←cid=queue[;1])⌿queue
+                  :If cid≠¯1
+                     queue←(~m)⌿queue
+                     conns←(m←conns[;1]≠cid)⌿conns
+                     hmongrid.(Values CellTypes)←m∘⌿¨hmongrid.(Values CellTypes)
+                     Log'===> ',(⍕≢removed),' queue items removed'
+                 :EndIf
+             :EndHold
+             :For uid :In removed[;2]~0
+                 'CONNECTION CLOSED'⎕TPUT'uid'GetToken uid
+             :EndFor
+         :Else
+             ∘∘∘
+         :EndSelect
+
+     :Else
+         Log'*** Conga.Wait failed: ',⍕z
+         ∘∘∘
+     :EndIf
+ :EndWhile
+
+ :If listen
+     Log'Listener closed ',⊃'YYYY-MM-DD hh:mm:ss'(1200⌶)1 ⎕DT'J'
+     iConga.Close listener
+     listener←''
+ :EndIf

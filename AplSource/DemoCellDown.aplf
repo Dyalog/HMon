@@ -1,0 +1,23 @@
+ DemoCellDown arg;row;cid;z;hdr;host;threads;address;port;data
+ row←7⊃arg
+ →(row∊⍳≢demodata)↓0
+ (cid address)←demodata[row;democols⍳'id' 'address']
+ hdr←'Process #',(⍕cid),' (@',address,') at time ',(⊃'hh:mm:ss'(1200⌶)1 ⎕DT'J'),':'
+
+ :If cid∊conns[;1]
+     (threads host)←GetFacts cid ('Threads' 'Host')
+     port←{6::0 ⋄ ⊃⍵.(Port6 Port4)~0}host.Value.RIDE
+
+     hmontxt.Text←hdr
+     hmonstack.Text←2 0↓⍕'TID' '' 'Stack'⍪(⊂'')⍪{⍵[⍋⍵[;1];]}↑threads.Values.(('&',⍕Tid) (' *'[1+Suspended]) (⍪Stack.Description,⊂''))
+     :If 0≠port
+         data←(⊃conns[conns[;1]⍳cid;3]),':',⍕port
+         hmonride.(Visible Active Data Caption)←1 1 data ('RIDE to ',data)
+     :Else
+         hmonride.Visible←0
+     :EndIf
+     hmongrid.CellTypes[;1]←1+2×cid=⍳≢conns
+ :Else
+     hmontxt.Text←'(Process not found)'
+     hmonstack.Text←''
+ :EndIf

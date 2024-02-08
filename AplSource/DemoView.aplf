@@ -1,0 +1,4 @@
+DemoView args;btn
+⍝ Toggle size of form to include logs
+btn←⊃args
+hmonform.Size[1]←btn.Posn[1]+(30 300)[1+btn.State]

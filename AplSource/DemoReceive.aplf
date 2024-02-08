@@ -1,0 +1,48 @@
+ DemoReceive arg;UID;Facts;data;TS;event;ts;cid;wsused;cpuused;compactions;ai;ws;line;fn;code;txt;threadcount;f;z;uid;m;adjustedheaders;standardfacts
+ ⍝ Receive all types of callbacks
+ (event data)←arg
+ ts←1 ⎕DT'J'
+ cid←2 1⊃⎕VFI UID←data.UID
+ :If (≢demodata)≠≢conns
+     demodata←(m←demodata[;1]∊conns[;1])⌿demodata
+     hmongrid.(Values CellTypes)←m∘⌿¨hmongrid.(Values CellTypes)
+ :EndIf
+
+
+standardfacts←'Workspace' 'AccountInformation' 'ThreadCount'
+ :Select event
+
+ :Case 'Notification'
+     :If 'UntrappedSignal'≡data.Event.Name
+        uid←(2⊃⎕VFI UID)-0 1 ⍝ /// temporary fix while we wait for a better way to ask for immediate push
+        z←cid Send  '["PollFacts",{"Facts": [',(⍕standardfacts),'], "Interval":0,"UID":"',(⍕uid),'"}]' ⍝ Request immediate push of Polling data
+     :EndIf
+
+ :Case 'Facts'
+      :If 0≠≢data.Facts
+      :AndIf ∧/(data.f←standardfacts)∊data.Facts.Name ⍝ Standard poll data
+         (ws ai threadcount)←data.(Facts[Facts.Name⍳f].Value)
+         (wsused compactions)←ws.(Used Compactions)
+         cpuused←ai.ComputeTime
+         adjustedheaders←democols~democols[1 3] ⍝ adjustheaders contain headers but without 'id' and 'address'
+         DemoUpdate cid adjustedheaders(ts cpuused wsused compactions,threadcount.(Total Suspended))
+     :Else
+         Log 'Unexpected facts received: ',⎕JSON data
+     :EndIf
+ ⍝   'DemoReceive' 2000 GetLastKnownState cid ⍝ Request last known state
+
+ :Case 'LastKnownState'
+     :If 0≠data.⎕NC'Activity'
+         (code fn line)←data.(Activity.code,Location.(Function Line))
+         txt←(⍕code),': ',fn,'[',(⍕line),']'
+         DemoUpdate cid('ts' 'laststate')(ts txt)
+     :EndIf
+
+ :Case 'Subscribed'
+     subs←↑data.Events.(Name Value)
+     ⎕←subs
+
+ :Else
+     ⎕←event(⎕JSON data)
+     ⍝ We do nothing right now
+ :EndSelect

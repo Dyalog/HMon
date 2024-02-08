@@ -1,0 +1,31 @@
+ DemoApplication dummy;framework;z;a
+ 'POLL:localhost:7000'(112⌶)2 1 ⍝ 2=Full access to info, 1 collect "breadcrumbs" for "Last Status"
+
+ ⎕FX'LOOP delay;z' 'z←⎕DL delay' '→1'
+ LOOP&1 ⍝ Launch a thread to keep things ticking over
+ 'FORM'⎕WC'Form' 'Close me to Crash'('Posn'(30 30))('Size'(100 300))('Coord' 'Pixel')
+
+ framework←2=⊃2250⌶⍬
+
+ ⎕USING←',System.Runtime',framework/'.dll'
+ :Repeat
+     ⎕DL 3
+
+     :If 0=⎕NC'FORM' ⍝ Time to crash?
+         ⎕FX'FOO' '1÷0'
+         FOO
+     :EndIf
+
+     :Select ?5
+     :Case 1
+         z←⎕DL 2
+     :Case 2
+         (System.Threading.Tasks.Task.Delay 2000).Wait ⍬
+     :Case 3
+         z←+/10000000?10000000
+     :Case 4
+         z←⎕WA
+     :Case 5
+         a←(?10000000)⍴⎕A
+     :EndSelect
+ :EndRepeat

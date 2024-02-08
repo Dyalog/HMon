@@ -1,0 +1,3 @@
+r←ScrollClose
+⎕EX 'hmonscroll'
+r←1

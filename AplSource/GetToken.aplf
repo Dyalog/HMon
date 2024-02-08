@@ -1,0 +1,6 @@
+ r←type GetToken id
+⍝ t.10001-t.20000: connection
+⍝ t.20001-t.30000: user id
+
+ 'id must be in range 1-1000'⎕SIGNAL((id<1)∨id>999)/11
+ r←token+(id÷100000)+0.1×'cid' 'uid'⍳⊂type

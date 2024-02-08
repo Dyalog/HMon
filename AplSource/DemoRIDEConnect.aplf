@@ -1,0 +1,5 @@
+DemoRIDEConnect args;btn
+btn←⊃args
+:If 0≠≢btn.Data
+    LaunchRide btn.Data
+:EndIf

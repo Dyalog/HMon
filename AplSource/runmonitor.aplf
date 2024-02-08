@@ -1,0 +1,4 @@
+{r}←runmonitor dummy
+:If r←~monitortid∊⎕TNUMS ⍝ Make sure monitor is running
+    monitortid←monitor&0 ⍝ Start in non-listening mode
+:EndIf

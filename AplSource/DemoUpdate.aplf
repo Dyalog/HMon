@@ -1,0 +1,15 @@
+ DemoUpdate(cid facts values);i;s;old;new;m
+⍝ Update and refresh the hmon grid
+
+ :If (≢demodata)≥i←demodata[;1]⍳cid
+     demodata[i;democols⍳facts]←values
+     values←demodata
+     values[;2]←'hh:mm:ss'(1200⌶)values[;2] ⍝ Format timestamps
+     values[;4 5]←,¨'LCI12'∘⎕FMT¨values[;4 5]÷⍤1⊢1E3 1E6
+     hmongrid.Values←⍕¨values
+     old←hmongrid.CellTypes[;s←democols⍳⊂'suspended']
+     hmongrid.CellTypes[;s]←new←1+values[;s]≠0
+     :If ∨/m←(old≠1)<new≠1 ⍝ anything gone from not suspended to suspended?
+         DemoCellDown ¯7↑m⍳1 ⍝ Trigger "cell down" event
+     :EndIf
+ :EndIf

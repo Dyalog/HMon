@@ -1,0 +1,16 @@
+ DemoViewLog args;line;text;size;hdr
+ line←1⌈¯1+1⍳⍨({⍵-⍵[1]}⊃(⊃args).Points)>args[3]
+ text←line⊃args[1].Text
+ hdr←(¯1+text⍳'[')↑text
+ text←(≢hdr)↓text
+ text←{0::⍵ ⋄ ⎕JSON⍠'Compact' 0⊢⎕JSON ⍵}text
+
+ :If 9≠⎕NC'hmonscroll'
+     hmonscroll←⎕NEW 'Form' (('Caption' ('Log Record #',⍕line))('Size'(size←800 400))('Posn'(40,¯420+2⊃⊃'.'⎕WG'DevCaps'))('Coord' 'Pixel')('FontObj' hmonform.FontObj)('VScroll' ¯2))
+     txt←hmonscroll.⎕NEW 'Edit' (('Style' 'Multi')('Posn' (10 10))('Size' (size-20)))
+ :EndIf
+ :If ~∧/hdr=' '
+ hmonscroll.Caption←hdr
+ hmonscroll.onClose←'ScrollClose'
+ txt.Text←{1↓¨((⎕UCS 13)=⍵)⊂⍵}(⎕UCS 13),text ⋄
+ :EndIf
