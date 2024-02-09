@@ -2,58 +2,62 @@
 
 The Health Monitor (HMON) interface to the Dyalog interpreter allows a client
 application or tool to connect and monitor its activity, memory usage etc.,
-to gauge its "state of health".
-
-Dyalog does not provide any client that uses the interface other than a
-sample.
-
-The interface is for a _monitor_ and currently only allows the client to
-_observe_ what is going on inside the interpreter to which it is attached, not
-control it in any way.
+to gauge its "state of health". The communications protocol between the
+interpreter and client is described in this document.
 
 THE HEALTH MONITOR INTERFACE IS UNDER CONTINUING DEVELOPMENT AND HAS BEEN
 INCLUDED IN DYALOG 19.0 AS AN EXPERIMENTAL FEATURE. FURTHER DEVELOPMENT IS
 PLANNED FOR SUBSEQUENT RELEASES AND THIS MAY RESULT IN CHANGES TO THE INTERFACE
 WHICH ARE INCOMPATIBLE WITH THE SPECIFICATION DESCRIBED HERE.
 
-By making use of this feature now and providing your feedback you will help
-shape its ongoing development. Please do get in touch to discuss your
-experiences, either through your normal communication channels or by emailing
-[support@dyalog.com](mailto:support@dyalog.com)
+# Establishing connections and controlling access levels
 
-# Permitting connections and controlling access levels
+The interpreter to be monitored may either listen for incoming client
+connections or initiate a connection to a client. It will not do either unless
+explicitly configured to do so using either the `HMON_INIT` config setting
+(prior to startup) or [`112⌶`](#112) (from within the interpreter).
 
-The interpreter will not permit connections unless explicitly configured
-to do so using either the `HMON_INIT` config setting (prior to startup)
-or [`112⌶`](#112) (from within the interpreter).
+The connection mode, address and port on which the interpreter should listen 
+or connect (the Interface Configuration) is determined by a character sequence
+of the form:
 
-The address and port on which the interpreter should listen for connections
-(the Interface Configuration) is determined by a character sequence of the form:
-
-`SERVE:address:port`
+`mode:address:port`
 
 where:
 
-- _address_ is the address of the interface on which the machine running
-  the APL process should listen (that is, the address of the machine that is
-  running the interpreter). Valid values are:
-  - `<empty>` – listen on all loopback interfaces, that is, the interpreter
-    only accepts connection from the local machine.
-  - `*` – listen on all local machine interfaces, that is, the interpreter
-    listens for connections from any (local or remote) machine/interface.
-  - The host/DNS name of the machine/interface running the interpreter –
-    listen on that specific interface on the local machine.
-  - The IPv4 address of the machine/interface running the interpreter –
-    listen on that specific interface on the local machine.
-  - The IPv6 address of the machine/interface running the interpreter –
-    listen on that specific interface on the local machine.
-- _port_ is the TCP port to listen on.
+- _mode_ is the connection mode - either SERVE (listen for incoming connections)
+  or POLL (initiate outgoing connection).
+- _address_ is the address of an interface on the local machine on which the
+  the interpreter should listen (SERVE mode) or the address of a machine
+  running a client to which the interpreter should connect (POLL mode).
+- _port_ is the TCP port to listen on or connect to.
+
+In SERVE mode _address_ may be specified as follows:
+
+- `<empty>` - listen on all loopback interfaces, that is, the interpreter only
+  accepts connection from the local machine.
+- `*` – listen on all local machine interfaces, that is, the interpreter
+  listens for connections from any (local or remote) machine/interface.
+- The host/DNS name of the machine/interface running the interpreter –
+  listen on that specific interface on the local machine.
+- The IPv4 address of the machine/interface running the interpreter –
+  listen on that specific interface on the local machine.
+- The IPv6 address of the machine/interface running the interpreter –
+  listen on that specific interface on the local machine.
+
+In POLL mode _address_ may be specified as follows:
+
+- `<empty>` – connect to a client on the the local machine.
+- The host/DNS name of the machine/interface running the client.
+- The IPv4 address of the machine/interface running the client.
+- The IPv6 address of the machine/interface running the client.
 
 For example:
 
 `HMON_INIT="SERVE:localhost:4512"`
 
-The level of information made available by the interpreter is determined by an Access Level:
+The level of information made available by the interpreter is determined by an
+Access Level:
 
 - 0 - No connections permitted.
 - 1 - Permit connections, with restricted information provided once connected.
@@ -65,9 +69,9 @@ The level of information made available by the interpreter is determined by an A
 The Access Level defaults to 1 with runtime interpreters and 2 with development interpreters.
 
 Some information which the interpreter provides requires it to perform
-additional work (which slows it down) even when a connected Health Monitor
-application is not requesting it. Whether it does this or not is controlled by
-setting an Event Gathering Level.
+additional work (which slows it down) even when a connected client is not
+requesting it. Whether it does this or not is controlled by setting an Event
+Gathering Level.
 
 - 0 - Do not gather information for [`GetLastKnownState`](#getlastknownstate)
   requests.
@@ -113,59 +117,35 @@ SupportedProtocols=2
 UsingProtocol=2
 ```
 
-Messages may be sent by the client to the interpreter and the interpreter will
-usually provide a response. This response may be the information requested,
-confirmation of receipt, or an error report (indicating e.g. invalid syntax or
-invalid message type etc.) No response is ever guaranteed: the interpreter may
-be in a state where it is unable to provide one.
+Messages sent by the client to the interpreter are _request_ messages. Messages
+sent by the interpreter to the client are _response_ messsages.
 
-The interpreter may also send messages to the client at any time, to inform of
-a particular event or to provide regular updates on its condition. These
-messages are only sent if either:
+The interpreter will usually respond to a request message by sending a response
+containing either the information requested, confirmation of receipt, or an
+error report (indicating e.g. invalid syntax or invalid message type etc.) It
+may also send response messages at any time - for example, to inform of a
+particular event or to provide regular updates on its condition, or if the
+application that the interpreter is running initiates them.
 
-- The client has first subscribed to them, _or_
-- The application that the interpreter is running initiates them.
-
-The interpreter will never _expect_ a response to any message it sends.
-
-The interpreter will process most messages it receives when it is between
-execution of APL code or otherwise in a position where it can safely access its
-workspace, and may therefore not respond immediately. Some messages, however,
-are handled as soon as they arrive.
-
-The different varieties of message are classified as follows:
-
-- _Request_, sub-divided into:
-  - _Standard request_: requests sent by the client, which are handled when the
-    interpreter is able to safely access its workspace.
-  - _High-priority request_: requests sent by the client, which are handled by
-    the interpreter as soon as they arrive.
-- _Response_: messages sent by the interpreter in reply to request messages.
-- _Notification_: messages sent by the interpreter at any time.
+The interpreter will process most request messages it receives when it is
+between execution of APL code or otherwise in a position where it can safely
+access its workspace, and may therefore not react immediately. The special
+request message [`GetLastKnownState`](#getlastknownstate) is designed to remain
+active and provide an immediate response in the event that the the interpreter
+is unable to respond at all to the others.
 
 Messages must be syntactically valid JSON text and of the 2-element array form
-described above; messages received by the interpreter which do not conform are
-rejected and an [`InvalidSyntax`](#invalidsyntax) response is sent. Messages
-must have a valid Message Name; messages which do not are rejected and an
-[`UnknownCommand`](#unknowncommand) response is sent.
+described above.
 
 Named items in the payload are described in the relevant documentation for each
 message type. The interpreter will ignore any unexpected named item (so long as
 it is described using syntactically valid JSON). Except as noted, request
 messages may include the named item "UID" (a string value) and if present the
-response will echo the same UID value. If a UID is present in the messages to
-subscribe to notification messages, it will be present in the response and in
-the notification messages themselves. UID strings may be used by a client as
+response will echo the same UID value. UID strings may be used by a client as
 it wishes - for example, to track requests and responses; the interpreter does
 not require them.
 
-The payload object in high-priority request messages must contain at most one
-named item, which must be "UID" and have a string value if present. If the
-message does not conform to this requirement, but is otherwise syntactically
-valid, it will be handled as a standard request message, rejected, and a
-[`MalformedCommand`](#malformedcommand) response will be sent.
-
-## Standard request messages
+## Request messages
 
 ### GetFacts
 
@@ -176,23 +156,18 @@ responded to with a [`Facts`](#facts) message.
 ["GetFacts",{"Facts":["Host","Workspace"]}]
 ```
 
-The [`Facts`](#facts) response will contain, for each requested fact,
-
-- An object named \"Value\" containing the items described in the sections
-  below, _or_
-- An array named \"Values\" containing zero or more objects each containing the
-  items described below.
-
 The following facts may be requested:
 
-| Fact ID | Fact name            | "Value" object or "Values" array in response |
-| ------- | -------------------- | -------------------------------------------- |
-| 1       | "Host"               | Value                                        |
-| 2       | "AccountInformation" | Value                                        |
-| 3       | "Workspace"          | Value                                        |
-| 4       | "Threads"            | Values (one per thread)                      |
-| 5       | "SuspendedThreads"   | Values (one per thread)                      |
-| 6       | "ThreadCount"        | Value                                        |
+| Fact ID | Fact name            |
+| ------- | -------------------- |
+| 1       | "Host"               |
+| 2       | "AccountInformation" |
+| 3       | "Workspace"          |
+| 4       | "Threads"            |
+| 5       | "SuspendedThreads"   |
+| 6       | "ThreadCount"        |
+
+See the [`Facts`](#facts) response message for the information provided.
 
 Fact may be requested using either their numeric Fact ID or their alphanumeric
 (string) Fact name, so the following `GetFacts` requests are equivalent to the
@@ -206,99 +181,11 @@ one above:
 ["GetFacts",{"Facts":["Host",3]}]
 ```
 
-The contents of the "Value" object or "Values" objects in the [`Facts`](#facts)
-response are:
-
-#### "Host" fact
-
-- "Machine" - an object containing facts about the host machine:
-  - "Name" - the name of the machine.
-  - "User" - the name of the user account.
-  - "PID" - the interpreter process ID.
-  - "Desc" - an application-specific description - see [`110⌶`](#110).
-  - "AccessLevel" - the level of rights the Health Monitor is permitted.
-
-- "Interpreter" - an object containing facts about the host interpreter:
-  - "Version" - the interpreter version, in the form "A.B.C".
-  - "BitWidth" - the interpreter edition word size, either 32 or 64 (bits).
-  - "IsUnicode" - a Boolean value indicating whether the interpreter is a
-    Unicode edition or not (i.e. is Classic).
-  - "IsRuntime" - a Boolean value indicating whether the interpreter is a
-    Runtime edition or not (i.e. is a development version).
-
-- "CommsLayer" - an object containing facts about the interpreter comms layer
-  servicing the Health Monitor:
-  - "Version" - the Comms Layer (Conga) version.
-  - "Address" - the interpreter's network IP address.
-  - "Port4" - the interpreter's network port number.
-  - "Port6" - an alternate port number.
-
-- "RIDE" - an object containing facts about the interpreter comms later
-  servicing RIDE:
-  - "Listening" - a Boolean value indicating whether the interpreter is
-    listening for RIDE connections. There are no further entries in this object
-    if the value is 0.
-  - "HTTPServer" - a Boolean value indicating whether the interpreter is
-    running as a RIDE HTTP server ("Zero footprint" RIDE).
-  - "Version" - the Comms Layer (Conga) version.
-  - "Address" - the interpreter's network IP address.
-  - "Port4" - the interpreter's network port number.
-  - "Port6" - an alternate port number.
-
-#### "AccountInformation" fact
-
-- "UserIdentification", "ComputeTime", "ConnectTime", "KeyingTime" - elements from `⎕AI`.
-
-#### "Workspace" fact
-
-- "WSID" - the workspace name.
-- "Available", "Used", "Compactions", "GarbageCollections", "GarbagePockets",
-  "FreePockets", "UsedPockets", "Sediment", "Allocation", "AllocationHWM",
-  "TrapReserveWanted", "TrapReserveActual" - statistics from `2000⌶`.
-
-#### "Threads" fact
-
-- "Tid" - thread ID
-- "Stack" - SIstack, as an array of objects each containing:
-  - "Restricted": a Boolean value indicating whether some information is
-    restricted (missing) because the Access Level does not permit it.
-  - "Description" - a line of SIstack information - only if "Restricted" is 0.
-- "Suspended" - a Boolean value indicating whether the thread is suspended.
-- "State" - a string indicating the current location of the thread.
-- "Flags" - e.g. Normal, Paused or Terminated.
-
-If "Suspended" is 1 the object will also contain:
-
-- "DMX" - an object containing elements of `⎕DMX` in that thread, either `null`
-  or:
-  - "Category", "DM", "EM", "EN", "ENX", "InternalLocation", "Vendor"
-    "Message", "OSError" - only if "Restricted" is 0.
-  - "Restricted": a Boolean value indicating whether some information is
-    restricted (missing) because the Access Level does not permit it.
-- "EXCEPTION" - an object containing elements of `⎕EXCEPTION` in that thread,
-  either `null` or:
-  - "Source", "StackTrace", "Message" - only if "Restricted" is 0.
-  - "Restricted": a Boolean value indicating whether some information is
-    restricted (missing) because the Access Level does not permit it.
-
-#### "SuspendedThreads" fact
-
-As ["Threads"](#threads-fact) with the exception that:
-
-- Only suspended threads are enumerated.
-- The "Suspended" item is omitted as it would always have the value 1.
-
-#### "ThreadCount" fact
-
-- "Total" - the total number of threads.
-- "Suspended" - the number of threads which are suspended.
-
 ### PollFacts
 
 `PollFacts` behaves in the same way as [`GetFacts`](#getfacts) except that it
 polls - that is, the [`Facts`](#facts) message response will be sent
-immediately and then repeat after specified or implied intervals until a new
-request is made.
+immediately and then repeat after specified or implied intervals.
 
 The interval defaults to 1000ms but any value of 500ms or more may be
 specified. Values less than 500 will be taken as 500.
@@ -315,7 +202,7 @@ Messages will continue at the requested frequency until either a new request
 is made (which will supersede any already established) or a
 [`StopFacts`](#stopfacts) message is sent.
 
-**Note:** polling messages may occasionally stop when the interpreter is
+**Note:** polling responses may occasionally stop when the interpreter is
 waiting on an external event such as a file operation, `⎕NA` call, etc.  It is
 currently also a limitation that polling messages may also stop when the
 interpreter is inactive - that is, when it is not running APL code or
@@ -323,7 +210,7 @@ responding to external input such as HMON requests or keyboard events.
 
 ### StopFacts
 
-A `StopFacts` message will stop polling messages from being sent.
+`StopFacts` cancels [`PollFacts`](#pollfacts).
 
 A UID may not be included in the message.
 
@@ -371,33 +258,45 @@ No event notifications are enabled by default.
 
 The following events may be subscribed to:
 
-| Subscription ID | Subscription name   | Event                                                                             | Additional values provided in notification |
-| --------------- | ------------------- | --------------------------------------------------------------------------------- | ------------------------------------------ |
-| 1               | WorkspaceCompaction | A workspace compaction has occurred                                               | "Tid" (thread ID) and "Stack" (SIstack)    |
-| 2               | WorkspaceResize     | The workspace size (the amount of memory committed by the OS) has grown or shrunk | "Size" (new size, in bytes)                |
-| 3               | UntrappedSignal     | An APL exception has been signalled which has not been trapped                    | "Tid", "Stack", "DMX" and "Exception"      |
-| 4               | TrappedSignal       | An APL exception has been signalled which has been trapped                        | "Tid", "Stack", "DMX" and "Exception"      |
+| Subscription ID | Subscription name   |
+| --------------- | ------------------- |
+| 1               | WorkspaceCompaction |
+| 2               | WorkspaceResize     |
+| 3               | UntrappedSignal     |
+| 4               | TrappedSignal       |
+
+When a subscribed event takes place, the [`Notification`](#notification)
+message will include details of that event, as documented there.
 
 Sending a `Subscribe` message resets the list of subscribed events to those
 specified - that is, it replaces any existing subscriptions. The list may be
 empty.
-
-"Tid", "Stack", "DMX" and "Exception" appear in the
-[`Notification`](#notification) response in the same format as the
-["Threads" fact](#threads-fact).
 
 **Note:** following a WSFULL exception the interpreter may be unable to send
 either a TrappedSignal or UntrappedSignal.
 [`GetLastKnownState`](#getlastknownstate) will reliably report the last time a
 WSFULL event occurred.
 
-## High-priority request messages
+### GetLastKnownState
 
-Responses to well-formed high-priority request messages are produced
-immediately regardless of what interpreter is otherwise doing at the time. To
-make this possible, the interpreter handles these incoming messages on a
-separate thread, where it has no access to the interpreter workspace and
-instead provides information from a repository which is continuously
+Requests the last known state of the interpreter, and will be responded to with
+a [`LastKnownState`](#lastknownstate) message.
+
+
+Examples:
+
+```json
+["GetLastKnownState",{}]
+```
+
+```json
+["GetLastKnownState",{"UID":"123"}]
+```
+
+`GetLastKnownState` requests can be used when a monitored interpreter becomes
+otherwise unresponsive. In "normal" use, [`GetFacts`](#getfacts) should be used.
+
+The "Last Known State" is provided from a repository which must be continuously
 maintained by the interpreter during its normal operation on the off-chance
 that it might be asked for at any time. This introduces an overhead so is only
 done if the Event Gathering Level is set to 1. Maintaining this repository is
@@ -405,49 +304,244 @@ independent of whether a Health Monitor is connected at the time or not.
 
 [`112⌶`](#112) controls the Event Gathering Level.
 
-In addition, `⎕PROFILE` must be started to provide full information,
-e.g.:
+In addition, `⎕PROFILE` must currently be started to provide full
+information, e.g.:
 
 `⎕PROFILE 'start' 'coverage'`
 
-**Note:** High-priority requests are intended to be used when a monitored
-interpreter becomes otherwise unresponsive. In "normal" use, standard requests
-should be used.
+## Response messages
 
-### GetLastKnownState
+### Facts
 
-Requests the last known state of the interpreter, and will be responded to with
-a [`LastKnownState`](#lastknownstate) message.
+Reports one or more "facts" about the application state, corresponding to a
+[`GetFacts`](#getfacts), [`PollFacts`](#pollfacts), [`StopFacts`](#stopfacts)
+or [`BumpFacts`](#bumpfacts) request.
+
+The facts are presented as an array of objects in the same order as in the
+request. Each will contain a "Value" object or a "Values" array of objects,
+the contents of which depend on the fact type.
+
+Example:
+
+```json
+["Facts",{"UID":"xx","Interval":5000,"Facts":[{"ID":6,"Name":"ThreadCount","Value":{"Total":1,"Suspended":0}}]}]
+```
+
+"Interval" is only present in the response if polling.
+
+#### "Host" fact
+
+The "Value" object contains:
+
+- "Machine" - an object containing facts about the host machine:
+  - "Name" - the name of the machine.
+  - "User" - the name of the user account.
+  - "PID" - the interpreter process ID.
+  - "Desc" - an application-specific description - see [`110⌶`](#110).
+  - "AccessLevel" - the level of rights the Health Monitor is permitted.
+
+- "Interpreter" - an object containing facts about the host interpreter:
+  - "Version" - the interpreter version, in the form "A.B.C".
+  - "BitWidth" - the interpreter edition word size, either 32 or 64 (bits).
+  - "IsUnicode" - a Boolean value indicating whether the interpreter is a
+    Unicode edition or not (i.e. is Classic).
+  - "IsRuntime" - a Boolean value indicating whether the interpreter is a
+    Runtime edition or not (i.e. is a development version).
+
+- "CommsLayer" - an object containing facts about the interpreter comms layer
+  servicing the Health Monitor:
+  - "Version" - the Comms Layer (Conga) version.
+  - "Address" - the interpreter's network IP address.
+  - "Port4" - the interpreter's network port number.
+  - "Port6" - an alternate port number.
+
+- "RIDE" - an object containing facts about the interpreter comms later
+  servicing RIDE:
+  - "Listening" - a Boolean value indicating whether the interpreter is
+    listening for RIDE connections. There are no further entries in this object
+    if the value is 0.
+  - "HTTPServer" - a Boolean value indicating whether the interpreter is
+    running as a RIDE HTTP server ("Zero footprint" RIDE).
+  - "Version" - the Comms Layer (Conga) version.
+  - "Address" - the interpreter's network IP address.
+  - "Port4" - the interpreter's network port number.
+  - "Port6" - an alternate port number.
+
+#### "AccountInformation" fact
+
+The "Value" object contains:
+
+- "UserIdentification", "ComputeTime", "ConnectTime", "KeyingTime" - elements
+  from `⎕AI`.
+
+#### "Workspace" fact
+
+The "Value" object contains:
+
+- "WSID" - the workspace name.
+- "Available", "Used", "Compactions", "GarbageCollections", "GarbagePockets",
+  "FreePockets", "UsedPockets", "Sediment", "Allocation", "AllocationHWM",
+  "TrapReserveWanted", "TrapReserveActual" - statistics from `2000⌶`.
+
+#### "Threads" fact
+
+The "Values" array contains one or more objects (one per thread), each containing:
+
+- "Tid" - thread ID
+- "Stack" - SIstack, as an array of objects each containing:
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+  - "Description" - a line of SIstack information - only if "Restricted" is 0.
+- "Suspended" - a Boolean value indicating whether the thread is suspended.
+- "State" - a string indicating the current location of the thread.
+- "Flags" - e.g. Normal, Paused or Terminated.
+
+If "Suspended" is 1 the object will also contain:
+
+- "DMX" - an object containing elements of `⎕DMX` in that thread, either `null`
+  or:
+  - "Category", "DM", "EM", "EN", "ENX", "InternalLocation", "Vendor"
+    "Message", "OSError" - only if "Restricted" is 0.
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+- "Exception" - an object containing elements of `⎕EXCEPTION` in that thread,
+  either `null` or:
+  - "Source", "StackTrace", "Message" - only if "Restricted" is 0.
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+
+#### "SuspendedThreads" fact
+
+The "Values" array contains one or more objects (one per suspended thread), each
+containing values as descrived for ["Threads"](#threads-fact) with the exception
+that the "Suspended" item is omitted as it would always have the value 1.
+
+#### "ThreadCount" fact
+
+The "Value" object contains:
+
+- "Total" - the total number of threads.
+- "Suspended" - the number of threads which are suspended.
+
+### Subscribed
+
+The response to [`Subscribe`](#subscribe). The message lists all subscription
+events and whether they are enabled or disabled.
+
+Example (showing an incomplete list of subscription events):
+
+```json
+["Subscribed",{"UID":"XX","Events":[{"ID":1,"Name":"WorkspaceCompaction","Value":1},{"ID":2,"Name":"WorkspaceResize","Value":0}]}
+```
+### Notification
+
+A `Notification` message indicates that a specified event, for which
+notifications have been subscribed, has taken or is taking place. The
+[`Subscribe`](#subscribe) message is used to select notified event types. The
+`Notification` message always reports a single event and contains the event ID
+and name, along with any specific detail pertaining to that event type.
+
+Example:
+
+```json
+["Notification",{"UID":"XX","Event":{"ID":2,"Name":"WorkspaceResize"},"Size":894213}]
+```
+
+#### "WorkspaceCompaction" event
+
+Occurs when a workspace compaction has occurred. The additional values provided are:
+
+- "Tid" - thread ID.
+- "Stack" - SIstack, as an array of objects each containing:
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+  - "Description" - a line of SIstack information - only if "Restricted" is 0.
+
+#### "WorkspaceResize" event
+
+Occurs when the workspace size (the amount of memory committed by the OS) has
+grown or shrunk. The additional values provided are:
+
+- "Size" - new size, in bytes.
+
+#### "UntrappedSignal" event
+
+Occurs when an APL exception has been signalled which has not been trapped. The additional values provided are:
+
+- "Tid" - thread ID.
+- "Stack" - SIstack, as an array of objects each containing:
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+  - "Description" - a line of SIstack information - only if "Restricted" is 0.
+- "DMX" - an object containing elements of `⎕DMX` in that thread, either `null`
+  or:
+  - "Category", "DM", "EM", "EN", "ENX", "InternalLocation", "Vendor"
+    "Message", "OSError" - only if "Restricted" is 0.
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+- "Exception" - an object containing elements of `⎕EXCEPTION` in that thread,
+  either `null` or:
+  - "Source", "StackTrace", "Message" - only if "Restricted" is 0.
+  - "Restricted": a Boolean value indicating whether some information is
+    restricted (missing) because the Access Level does not permit it.
+
+#### "TrappedSignal" event
+
+Occurs when an APL exception has been signalled which has not been trapped. The
+additional values provided are as described for
+[`UntrappedSignal`](#untrappedsignal-event)
+
+### LastKnownState
+
+The response to [`GetLastKnownState`](#getlastknownstate), containing:
+
+- The UID, if provided in the request.
+- The interpreter\'s current UTC clock setting, so that times elapsed since the
+  other timings can be computed.
+- The line currently being executed by the interpreter and the UTC time that
+  this line started or resumed execution, if enabled with `112⌶` and `⎕PROFILE`
+  is running (otherwise this information is omitted).
+- An activity code and the UTC time that this activity started, if enabled with
+  [`112⌶`](#112) (otherwise omitted).
+- The time a trapped or untrapped WSFULL event last occurred, if enabled with
+  [`112⌶`](#112) (otherwise omitted).
+
+UTC times are in ISO format with millisecond precision, e.g.
+20231231T235959.999 for the very last millisecond of 2023.
+
+Activity codes are:
+
+| Code | Meaning                                 |
+| ---- | --------------------------------------- |
+| 1    | Anything not specifically listed below  |
+| 2    | Performing a workspace allocation       |
+| 3    | Performing a workspace compaction       |
+| 4    | Performing a workspace check            |
+| 222  | Sleeping (an internal testing feature)  |
+
+_This functionality is at an early stage of development. It is anticipated that
+this list will be significantly extended in future._
 
 Examples:
 
-#### No UID provided:
+#### No UID provided, and [`112⌶0`](#112) set:
 
 ```json
-["GetLastKnownState",{}]
+["LastKnownState",{"TS":"20230111T144700.132Z"}]
 ```
 
-#### UID provided:
+#### UID provided, [`112⌶2 1`](#112) set and `⎕PROFILE` started:
 
 ```json
-["GetLastKnownState",{"UID":"123"}]
+["LastKnownState",{"UID":"123","TS":"20230111T144700.132Z","Activity":{"Code":1,"TS":"20230111T144700.132Z"},"Location":{"Function":"#.f","Line":2,"TS":"20230111T144700.132Z"},"WS FULL":{"TS":"20230111T144620.723Z"}}]
 ```
 
-#### Bad syntax - will receive a (not necessarily immediate)
-[`InvalidSyntax`](#invalidsyntax) response:
-
-```json
-["GetLastKnownState"]
-```
-
-#### Good syntax, but not precisely conforming to specification - will receive
-a (not necessarily immediate) [`MalformedCommand`](#malformedcommand) response:
-
-```json
-["GetLastKnownState",{"id":"12345"}]
-```
-
-## Response messages
+Note: "Location" is updated by the interpreter whenever execution of a line
+begins or resumes. If program execution stops for any reason (e.g.  exception
+or program termination) it will report the last executed line. "location" does
+not report anything about inactive threads - full thread/stack info is
+available with [`GetFacts`](#getfacts), so long as the interpreter is
+responsive.
 
 ### InvalidSyntax
 
@@ -487,113 +581,14 @@ Example:
 
 ### MalformedCommand
 
-The response to a syntactically correct high-priority request message which
-does not exactly conform to specification. The name, and the UID if provided,
-are included in the message.
+The response to a syntactically correct request message which does not exactly
+conform to specification. The name, and the UID if provided, are included in
+the message.
 
 Example:
 
 ```json
 ["MalformedCommand",{"Name":"GetLastKnownState"}]
-```
-
-### Facts
-
-Reports one or more "facts" about the application state, corresponding to a
-[`GetFacts`](#getfacts), [`PollFacts`](#pollfacts), [`StopFacts`](#stopfacts)
-or [`BumpFacts`](#bumpfacts) request.
-
-Example:
-
-```json
-["Facts",{"UID":"xx","Interval":5000,"Facts":[{"ID":6,"Name":"ThreadCount","Value":{"Total":1,"Suspended":0}}]}]
-```
-
-The facts are returned as an array of objects in the same order as in the
-request. The content of the "Value" or "Values" item within each object depends
-on the fact type, and is described in the [`GetFacts`](#getfacts) section.
-
-"Interval" is only present in the response if polling.
-
-### Subscribed
-
-The response to [`Subscribe`](#subscribe). The message lists all subscription
-events and whether they are enabled or disabled.
-
-Example (showing an incomplete list of subscription events):
-
-```json
-["Subscribed",{"UID":"XX","Events":[{"ID":1,"Name":"WorkspaceCompaction","Value":1},{"ID":2,"Name":"WorkspaceResize","Value":0}]}
-```
-
-### LastKnownState
-
-The (immediate) response to [`GetLastKnownState`](#getlastknownstate),
-containing:
-
-- The UID, if provided in the request.
-- The interpreter\'s current UTC clock setting, so that times elapsed since the
-  other timings can be computed.
-- The line currently being executed by the interpreter and the UTC time that
-  this line started or resumed execution, if enabled with `112⌶` and `⎕PROFILE`
-  is running (otherwise this information is omitted).
-- An activity code and the UTC time that this activity started, if enabled with
-  [`112⌶`](#112) (otherwise omitted).
-- The time a trapped or untrapped WSFULL event last occurred, if enabled with
-  [`112⌶`](#112) (otherwise omitted).
-
-UTC times are in ISO format with millisecond precision, e.g.
-20231231T235959.999 for the very last millisecond of 2023.
-
-Activity codes are:
-
-| Code | Meaning                                                                 |
-| ---- | ----------------------------------------------------------------------- |
-| 1    | Anything not specifically listed below                                  |
-| 2    | Performing a workspace allocation                                       |
-| 3    | Performing a workspace compaction                                       |
-| 4    | Performing a workspace check                                            |
-| 222  | Sleeping due to the use of [`222⌶`](#222) (an internal testing feature) |
-
-_It is anticipated that this list will be significantly extended in future._
-
-Examples:
-
-#### No UID provided, and [`112⌶0`](#112) set:
-
-```json
-["LastKnownState",{"TS":"20230111T144700.132Z"}]
-```
-
-#### UID provided, [`112⌶2 1`](#112) set and `⎕PROFILE` started:
-
-```json
-["LastKnownState",{"UID":"123","TS":"20230111T144700.132Z","Activity":{"Code":1,"TS":"20230111T144700.132Z"},"Location":{"Function":"#.f","Line":2,"TS":"20230111T144700.132Z"},"WS FULL":{"TS":"20230111T144620.723Z"}}]
-```
-
-Note: "Location" is updated by the interpreter whenever execution of a line
-begins or resumes. If program execution stops for any reason (e.g.  exception
-or program termination) it will report the last executed line. "location" does
-not report anything about inactive threads - full thread/stack info is
-available with [`GetFacts`](#getfacts), so long as the interpreter is
-responsive.
-
-## Notification messages
-
-### Notification
-
-A `Notification` message indicates that a specified event, for which
-notifications have been subscribed, has taken or is taking place. The
-[`Subscribe`](#subscribe) message is used to select notified event types. The
-`Notification` message always reports a single event and contains the event ID
-and name, along with any specific detail pertaining to that event type - the
-specific detail is listed in the table shown for the [`Subscribe`](#subscribe)
-message.
-
-Example:
-
-```json
-["Notification",{"UID":"XX","Event":{"ID":2,"Name":"WorkspaceResize"},"Size":894213}]
 ```
 
 ### UserMessage
@@ -695,14 +690,3 @@ Otherwise, the comms layer is stopped or started as requested and then:
 
 - An error will be signalled if the operation fails.
 - The shy value 1 will be returned if the operation succeeds.
-
-## 222
-
-`{R}←(222⌶) Y`
-
-Y is an integer time value, in seconds.
-
-The interpreter will sleep for the specified time. Unlike `⎕DL`, the
-interpreter will not thread switch or respond to any events on its main thread
-during this time. This function exists for internal testing of High-priority
-request messages.
