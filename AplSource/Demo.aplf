@@ -1,10 +1,10 @@
 Demo;size;widths;sz
 ⍝ HMON demo application
 
-democols  ←'id' 'ts' 'address' 'cpu(s)' 'ws(Mb)' 'compactions' 'threads' 'suspended'
-demoprotos←  0    0         ''    0    0            ''         0           0
+democols  ←'id' 'ts' 'address' 'cpu(s)' 'ws(Mb)' 'compactions' 'threads' 'suspended' 'Desc'
+demoprotos←  0    0         ''    0    0            ''         0           0         ''
 demodata←(0,≢democols)⍴demoprotos
-widths←60 120 100 130 130 140 100 130
+widths←60 120 100 130 130 140 100 130 150
 
 hmonform←⎕NEW 'Form' (('Caption' 'Health Monitor')('Coord' 'Pixel')('Size' (size←800,22++/widths))('Font' ('Calibri' 20)))
 hmonform.onClose←'DemoClose'

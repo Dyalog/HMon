@@ -1,0 +1,11 @@
+DemoForm dummy
+'FORM'⎕WC'Form' 'Close me to Crash'('Posn'(30 30))('Size'(100 350))('Coord' 'Pixel')
+'FORM.L1' ⎕WC 'Label' 'Set Identity:' (10 10)
+'FORM.ID' ⎕WC 'Edit' '' (10 100)(22 150)
+'FORM.SETID' ⎕WC 'Button' 'Set' (10 270)(22 50)('Event' 'Select' 'DemoAction')
+
+'FORM.L2' ⎕WC 'Label' 'Send Message:' (40 10)
+'FORM.MSG' ⎕WC 'Edit' '' (40 100)(22 150)
+'FORM.SEND' ⎕WC 'Button' 'Send' (40 270)(22 50)('Event' 'Select' 'DemoAction')
+
+ ⎕DQ 'FORM'

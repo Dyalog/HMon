@@ -1,0 +1,7 @@
+DemoAction args
+:Select ⊃args
+:Case 'FORM.SETID'
+      110⌶FORM.ID.Text
+:Case 'FORM.SEND'
+      111⌶FORM.MSG.Text
+:EndSelect
