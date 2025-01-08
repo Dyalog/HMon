@@ -7,7 +7,7 @@
 
  :If 9≠⎕NC'hmonscroll'
      hmonscroll←⎕NEW 'Form' (('Caption' ('Log Record #',⍕line))('Size'(size←800 400))('Posn'(40,¯420+2⊃⊃'.'⎕WG'DevCaps'))('Coord' 'Pixel')('FontObj' hmonform.FontObj)('VScroll' ¯2))
-     txt←hmonscroll.⎕NEW 'Edit' (('Style' 'Multi')('Posn' (10 10))('Size' (size-20)))
+     txt←hmonscroll.⎕NEW 'Edit' (('Style' 'Multi')('Posn' (10 10))('Size' (size-20))('VScroll' ¯1))
  :EndIf
  :If ~∧/hdr=' '
  hmonscroll.Caption←hdr

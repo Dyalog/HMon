@@ -1,10 +1,11 @@
- DemoApplication dummy;framework;z;a
+ DemoApplication dummy;framework;z;a;path
+ 2 ⎕FIX¨ ⎕SE.Link.LaunchDir∘,¨'/DemoForm.aplf' '/DemoAction.aplf'
+
  'POLL:localhost:7000'(112⌶)2 1 ⍝ 2=Full access to info, 1 collect "breadcrumbs" for "Last Status"
 
  ⎕FX'LOOP delay;z' 'z←⎕DL delay' '→1'
  LOOP&1 ⍝ Launch a thread to keep things ticking over
- 'FORM'⎕WC'Form' 'Close me to Crash'('Posn'(30 30))('Size'(100 300))('Coord' 'Pixel')
-
+ DemoForm&⍬
  framework←2=⊃2250⌶⍬
 
  ⎕USING←',System.Runtime',framework/'.dll'

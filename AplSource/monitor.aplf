@@ -35,8 +35,10 @@
 
              :Hold 'hmon'
                  cb←0
-                 :If (≢queue)<i←queue[;1 2]⍳cid uid
-                     Log'*** Unqueued message received'
+                 :If 'UserMessage'≡⊃data
+                     Log 'User Message from ',(⍕cid),': ',(2⊃data).Message
+                 :ElseIf (≢queue)<i←queue[;1 2]⍳cid uid
+                     Log'*** Unexpected message received'
                      Log'===> ',,⍕z
                      :Continue
                  :ElseIf cb←(0≠≢fn←⊃queue[i;3])∧'Subscribed'≢⊃data ⍝ Callback fn (ignore for "Subscribe" call)
