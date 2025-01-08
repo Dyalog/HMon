@@ -10,7 +10,7 @@ INCLUDED IN DYALOG 19.0 AND 20.0 AS AN EXPERIMENTAL FEATURE. FURTHER DEVELOPMENT
 PLANNED FOR SUBSEQUENT RELEASES AND THIS MAY RESULT IN CHANGES TO THE INTERFACE
 WHICH ARE INCOMPATIBLE WITH THE SPECIFICATION DESCRIBED HERE.
 
-> [NOTE]
+> [!NOTE]
 > Features which differ between different versions of Dyalog are highlighted like this.
 
 # Establishing connections and controlling access levels
