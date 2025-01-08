@@ -5,10 +5,13 @@ application or tool to connect and monitor its activity, memory usage etc.,
 to gauge its "state of health". The communications protocol between the
 interpreter and client is described in this document.
 
-THE HEALTH MONITOR INTERFACE IS UNDER CONTINUING DEVELOPMENT AND HAS BEEN
-INCLUDED IN DYALOG 19.0 AS AN EXPERIMENTAL FEATURE. FURTHER DEVELOPMENT IS
+THE HEALTH MONITOR INTERFACE IS UNDER CONTINUING DEVELOPMENT AND IS
+INCLUDED IN DYALOG 19.0 AND 20.0 AS AN EXPERIMENTAL FEATURE. FURTHER DEVELOPMENT IS
 PLANNED FOR SUBSEQUENT RELEASES AND THIS MAY RESULT IN CHANGES TO THE INTERFACE
 WHICH ARE INCOMPATIBLE WITH THE SPECIFICATION DESCRIBED HERE.
+
+> [NOTE]
+> Features which differ between different versions of Dyalog are highlighted like this.
 
 # Establishing connections and controlling access levels
 
@@ -347,6 +350,11 @@ The "Value" object contains:
     Unicode edition or not (i.e. is Classic).
   - "IsRuntime" - a Boolean value indicating whether the interpreter is a
     Runtime edition or not (i.e. is a development version).
+  - "SessionUUID" - a String value containing a unique Session UUID in
+    [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562) format.
+
+> [!NOTE]
+> "SessionUUID is not provided by Dyalog 19.0.
 
 - "CommsLayer" - an object containing facts about the interpreter comms layer
   servicing the Health Monitor:
