@@ -619,14 +619,12 @@ Example:
 
 `{R}←(110⌶) Y`
 
-Specifies the machine "description", which will appear in
+Specifies the machine description which will appear in
 [`Facts`](#host-fact) messages sent to the Health Monitor.
+The default machine description is an empty string (`""`) until one is
+explicitly specified.
 
 Y is any array or namespace which can be serialised as JSON text.
-
-> [!NOTE]
-The machine description will be an empty string (`""`) if none is explicitly
-specified.
 
 > [!NOTE]
 > Dyalog 19.0 only: Y is a vector or scalar only; the "description" in the
