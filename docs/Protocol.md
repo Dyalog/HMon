@@ -343,6 +343,10 @@ The "Value" object contains:
   - "Desc" - an application-specific description - see [`110⌶`](#110).
   - "AccessLevel" - the level of rights the Health Monitor is permitted.
 
+> [!NOTE]
+> "Desc" is always a string value when produced by Dyalog 19.0. It may be any
+value (including an object) when produced by Dyalog 20.0 onwards.
+
 - "Interpreter" - an object containing facts about the host interpreter:
   - "Version" - the interpreter version, in the form "A.B.C".
   - "BitWidth" - the interpreter edition word size, either 32 or 64 (bits).
@@ -354,7 +358,7 @@ The "Value" object contains:
     [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562) format.
 
 > [!NOTE]
-> "SessionUUID is not provided by Dyalog 19.0.
+> "SessionUUID" is not provided by Dyalog 19.0.
 
 - "CommsLayer" - an object containing facts about the interpreter comms layer
   servicing the Health Monitor:
@@ -615,10 +619,18 @@ Example:
 
 `{R}←(110⌶) Y`
 
-Specifies the interpreter "description", which will appear in
+Specifies the machine "description", which will appear in
 [`Facts`](#host-fact) messages sent to the Health Monitor.
 
-Y is a character vector or scalar containing the free-form text.
+Y is any array or namespace which can be serialised as JSON text.
+
+> [!NOTE]
+The machine description will be an empty string (`""`) if none is explicitly
+specified.
+
+> [!NOTE]
+> Dyalog 19.0 only: Y is a vector or scalar only; the "description" in the
+[`Facts`](#host-fact) message is therefore always a string value.
 
 The shy result is the value 1.
 
