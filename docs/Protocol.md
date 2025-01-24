@@ -322,9 +322,10 @@ information, e.g.:
 
 ### ConnectRide
 
-Requests that the interpreter connects to RIDE listning at a given address and on a
-given port, or disconnects a conection. Once the action has taken place the message
-will be responded to with a [`RideConnection`](#rideconnection) message.
+Requests that the interpreter connects to RIDE listening at a given address and
+on a given port, or disconnects a conection. Once the action has taken place
+the request will be responded to with a [`RideConnection`](#rideconnection)
+message.
 
 Examples:
 
@@ -332,18 +333,18 @@ Examples:
 ["ConnectRide",{"Address":"localhost","Port":4502}]
 ```
 
-If `Address` and `Port` are both present in the mesasge, and have string and numeric
-values respectively, a connection will be attempted, otherwise any existing
-connection will be disconnected.
+If `Address` and `Port` are both present in the mesasge, and have string and
+numeric values respectively, a connection will be attempted, otherwise any
+existing connection will be disconnected.
 
-For a connection request, the HMON will send `3502⌶'CONNECT:<Address>:<port>'`
-to the interpreter and, if that is successful, `3502⌶1`. For a disconnecton request,
-HMON will send `3502⌶0`.
-See [Manage RIDE Connections](https://help.dyalog.com/latest/#Language/I%20Beam%20Functions/Manage%20RIDE%20Connections.htm#Manage_RIDE_Connections)
+For a connection request, HMON will send `3502⌶'CONNECT:<Address>:<port>'`
+to the interpreter and, if that is successful, `3502⌶1`. For a disconnecton
+request, HMON will send `3502⌶0`.  See
+[Manage RIDE Connections](https://help.dyalog.com/latest/#Language/I%20Beam%20Functions/Manage%20RIDE%20Connections.htm#Manage_RIDE_Connections)
 for details of how `3502⌶0` behaves, the return values it produces etc.
 
-Note: the interpreter Access Level must be set to 3 in otder to permit this request.
-[`112⌶`](#112) controls the Access Level.
+Note: the interpreter Access Level must be set to 3 in order to permit this
+request. [`112⌶`](#112) controls the Access Level.
 
 > [!NOTE]
 > "ConnectRide" is not supported by Dyalog 19.0.
@@ -597,12 +598,12 @@ The response to [`ConenectRide`](#connectride), containing:
 
 - The UID, if provided in the request.
 - "Restricted": a Boolean value indicating whether the connection request was 
-   disallowed  because the Access Level did not permit it.
+  disallowed  because the Access Level did not permit it.
 - "Connect": a Boolean indicating whether the [`ConenectRide`](#connectride)
-   message was interpreter as a Connect (1) or Disconnect (0) request (only present if
-   "Restricted" is 0).
-- "Status": the return code issued by `3502⌶`. 0 indicates success (only present if
-   "Restricted" is 0).
+  message was interpreter as a Connect (1) or Disconnect (0) request - only if
+  "Restricted" is 0).
+- "Status": the return code issued by `3502⌶` (0 indicates success) - only if
+  "Restricted" is 0).
 
 Example:
 
