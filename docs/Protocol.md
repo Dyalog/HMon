@@ -63,11 +63,20 @@ The level of information made available by the interpreter is determined by an
 Access Level:
 
 - 0 - No connections permitted.
-- 1 - Permit connections, with restricted information provided once connected.
-  Restricted information includes memory usage, number of running threads etc.
-  but nothing which exposes the code of the application being run, such as the
-  SI stack.
-- 2 - Permit connections, with full information provided once connected.
+- 1 - Permit connections, with restricted information provided and permissions
+  once connected. 
+- 2 - Permit connections, with full information provided but restricted permissions
+      once connected.
+- 3 - Permit connectons, with full information provided and full permissions
+      once connected.
+
+Information which is not available when restricted includes anything which
+exposes the code of the aplication being run, such as the SI stack. Information
+such as memory usage, number of running threads etc. is not restricted is
+always available once a connection is established.
+
+Permissions which are not available when restricted include anything which can
+control (rather than observe) the interpreter, such as connecting to RIDE.
 
 The Access Level defaults to 1 with runtime interpreters and 2 with development interpreters.
 
@@ -285,7 +294,6 @@ WSFULL event occurred.
 Requests the last known state of the interpreter, and will be responded to with
 a [`LastKnownState`](#lastknownstate) message.
 
-
 Examples:
 
 ```json
@@ -311,6 +319,34 @@ In addition, `⎕PROFILE` must currently be started to provide full
 information, e.g.:
 
 `⎕PROFILE 'start' 'coverage'`
+
+### ConnectRide
+
+Requests that the interpreter connects to RIDE listning at a given address and on a
+given port, or disconnects a conection. Once the action has taken place the message
+will be responded to with a [`RideConnection`](#rideconnection) message.
+
+Examples:
+
+```json
+["ConnectRide",{"Address":"localhost","Port":4502}]
+```
+
+If `Address` and `Port` are both present in the mesasge, and have string and numeric
+values respectively, a connection will be attempted, otherwise any existing
+connection will be disconnected.
+
+For a connection request, the HMON will send `3502⌶'CONNECT:<Address>:<port>'`
+to the interpreter and, if that is successful, `3502⌶1`. For a disconnecton request,
+HMON will send `3502⌶0`.
+See [Manage RIDE Connections](https://help.dyalog.com/latest/#Language/I%20Beam%20Functions/Manage%20RIDE%20Connections.htm#Manage_RIDE_Connections)
+for details of how `3502⌶0` behaves, the return values it produces etc.
+
+Note: the interpreter Access Level must be set to 3 in otder to permit this request.
+[`112⌶`](#112) controls the Access Level.
+
+> [!NOTE]
+> "ConnectRide" is not supported by Dyalog 19.0.
 
 ## Response messages
 
@@ -555,6 +591,28 @@ not report anything about inactive threads - full thread/stack info is
 available with [`GetFacts`](#getfacts), so long as the interpreter is
 responsive.
 
+### RideConnection
+
+The response to [`ConenectRide`](#connectride), containing:
+
+- The UID, if provided in the request.
+- "Restricted": a Boolean value indicating whether the connection request was 
+   disallowed  because the Access Level did not permit it.
+- "Connect": a Boolean indicating whether the [`ConenectRide`](#connectride)
+   message was interpreter as a Connect (1) or Disconnect (0) request (only present if
+   "Restricted" is 0).
+- "Status": the return code issued by `3502⌶`. 0 indicates success (only present if
+   "Restricted" is 0).
+
+Example:
+
+```json
+["RideConnection",{"UID":"myuid","Restricted":0,"Connect":1,"Status":0}]
+```
+
+> [!NOTE]
+> "RideConnection" is not provided by Dyalog 19.0.
+
 ### InvalidSyntax
 
 The response to a syntactically invalid JSON message, or a message which does
@@ -672,7 +730,7 @@ X should be a character vector containing either:
 
 Y should contain:
 
-- The Access Level values of 1 or 2, _and optionally_
+- The Access Level values of 1, 2 or 3, _and optionally_
 - The Event Gathering setting; defaults to 0 if not specified.
 
 ### Updating the Access Level and Event Gathering settings
@@ -681,7 +739,7 @@ The function should be called monadically or with 0 in X.
 
 Y should contain:
 
-- The Access Level values of 1 or 2, _and optionally_
+- The Access Level values of 1, 2 or 3, _and optionally_
 - The Event Gathering setting, which defaults to 0 if not specified.
 
 The settings can be changed whether or not a client is currently attached and
