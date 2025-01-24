@@ -62,13 +62,13 @@ For example:
 The level of information made available by the interpreter is determined by an
 Access Level:
 
-- 0 - No connections permitted.
-- 1 - Permit connections, with restricted information provided and permissions
-  once connected. 
-- 2 - Permit connections, with full information provided but restricted permissions
-      once connected.
+- 0 - Disallow connections.
+- 1 - Permit connections, with restricted information provided and restricted
+  permissions once connected. 
+- 2 - Permit connections, with full information provided but restricted
+  permissions once connected.
 - 3 - Permit connectons, with full information provided and full permissions
-      once connected.
+  once connected.
 
 Information which is not available when restricted includes anything which
 exposes the code of the aplication being run, such as the SI stack. Information
@@ -76,9 +76,11 @@ such as memory usage, number of running threads etc. is not restricted is
 always available once a connection is established.
 
 Permissions which are not available when restricted include anything which can
-control (rather than observe) the interpreter, such as connecting to RIDE.
+control (rather than observe) the interpreter, such establishing a connection
+to RIDE.
 
-The Access Level defaults to 1 with runtime interpreters and 2 with development interpreters.
+The Access Level defaults to 1 with runtime interpreters and 2 with development
+interpreters. Access level 3 is never enabled by default.
 
 Some information which the interpreter provides requires it to perform
 additional work (which slows it down) even when a connected client is not
@@ -341,7 +343,7 @@ For a connection request, HMON will send `3502⌶'CONNECT:<Address>:<port>'`
 to the interpreter and, if that is successful, `3502⌶1`. For a disconnecton
 request, HMON will send `3502⌶0`.  See
 [Manage RIDE Connections](https://help.dyalog.com/latest/#Language/I%20Beam%20Functions/Manage%20RIDE%20Connections.htm#Manage_RIDE_Connections)
-for details of how `3502⌶0` behaves, the return values it produces etc.
+for details of how `3502⌶` behaves, the return values it produces etc.
 
 Note: the interpreter Access Level must be set to 3 in order to permit this
 request. [`112⌶`](#112) controls the Access Level.
@@ -710,7 +712,7 @@ The shy result is the value 1.
 
 Starts and stops the Health Monitor, specifies the Interface Configuration and
 controls the Access and Event Gathering Levels. See the section
-[`Permitting connections and controlling access levels`](#permitting-connections-and-controlling-access-levels)
+[`Establishing connections and controlling access levels`](#establishing-connections-and-controlling-access-levels)
 for an explanation of what these are and their permitted values.
 
 Y is a 1 or 2-element numeric array consisting of:
