@@ -394,7 +394,8 @@ value (including an object) when produced by Dyalog 20.0 onwards.
   - "IsRuntime" - a Boolean value indicating whether the interpreter is a
     Runtime edition or not (i.e. is a development version).
   - "SessionUUID" - a String value containing a unique Session UUID in
-    [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562) format.
+    [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562) format (see also
+    [`113⌶0`](#113)).
 
 > [!NOTE]
 > "SessionUUID" is not provided by Dyalog 19.0.
@@ -769,3 +770,15 @@ Otherwise, the comms layer is stopped or started as requested and then:
 
 - An error will be signalled if the operation fails.
 - The shy value 1 will be returned if the operation succeeds.
+
+## 113
+
+`R←X (113⌶) Y`
+
+Y must be <code>⍬</code>
+
+The result is a character vector containing the Session UUID, as reported to an
+HMON client as a [Host fact](#host-fact).
+
+> [!NOTE]
+> `113⌶` is not available in Dyalog 19.0.
