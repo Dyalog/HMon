@@ -16,7 +16,6 @@ The source code for the demonstration client can be found here. See the [Usage G
 
 ## Reporting Issues
 
-Issues with HMON can be reported as GitHub issues or via the Dyalog Helpdesk at support@dyalog.com.
+Issues with the HMON documentation and sample can be reported here as GitHub issues or via the Dyalog Helpdesk at support@dyalog.com.
 
-
-
+Issues with the HMON interface itself within Dyalog should be reported via the Dyalog Helpdesk at support@dyalog.com (or, for Dyalog employees, using Mantis).
