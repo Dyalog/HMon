@@ -10,7 +10,7 @@
 RETRY:
 
  :Hold 'hmon'
-     :If (2=≢u)∧326=⎕DR u
+     :If (2=≢u)∧9=⎕NC'u'
          u[2].UID←⍕cid,uid←⊃(⍳1+≢queue)~queue[;1]
          payload←⎕JSON u
      :Else

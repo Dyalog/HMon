@@ -45,7 +45,7 @@
                      (⍎fn)&data            ⍝ Run it in a separate thread
                  :EndIf
 
-                 :If done←80≠⎕DR data      ⍝ If namespace, check polling state
+                 :If done←9=⎕NC'data'      ⍝ If namespace, check polling state
                      done←data[2].{6::0 ⋄ Interval=0}⍬  ⍝ Polling done
                  :EndIf
                  :If done∨0=≢fn            ⍝   ... or no callback fn
