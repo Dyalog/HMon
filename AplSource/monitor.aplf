@@ -45,9 +45,7 @@
                      (⍎fn)&data            ⍝ Run it in a separate thread
                  :EndIf
 
-                 :If done←80≠⎕DR data      ⍝ If namespace, check polling state
-                     done←data[2].{6::0 ⋄ Interval=0}⍬  ⍝ Polling done
-                 :EndIf
+                 done←{2 6::0 ⋄ ⍵[2].Interval=0}data  ⍝ Polling done
                  :If done∨0=≢fn            ⍝   ... or no callback fn
                      queue←(i≠⍳≢queue)⌿queue
                  :EndIf
