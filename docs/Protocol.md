@@ -103,17 +103,18 @@ to starting the interpreter, or to override any existing `HMON_INIT` setting.
 
 ## Overview
 
-A message starts with a 4-byte big-endian _total length_ field, followed by
+A message starts with a 4-byte _total length_ field, followed by
 the four ASCII-encoded characters `HMON` and a UTF-8-encoded payload:
 
 ```
  Total length        "HMON"              Payload
 ┌───────────────────┬───────────────────┬─────~─────┐
-│0x00 0x00 0x00 0x0B│0x48 0x4D 0x4F 0x4E│    ...    │
+│B0   B1   B2   B3  │0x48 0x4D 0x4F 0x4E│    ...    │
 └───────────────────┴───────────────────┴─────~─────┘
 ```
 
-_Total length_ is therefore 8 + the byte length of the payload.
+_Total length_ is therefore 8 + the byte length of the payload, encoded
+in big-endian format (bytes B0 to B3, MSB in B0).
 
 The payload is almost always a 2-element JSON array consisting of a Message
 Name and arguments as key/value pairs:
